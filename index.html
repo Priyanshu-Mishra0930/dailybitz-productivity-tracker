@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Dailybitz</title>
+        <link rel="stylesheet" href="style.css">
+        <link rel="icon" href="favicon.jpeg">
+    </head>
+    <body>
+        <div id="app">
+            <div id="header">DailyBitz</div>
+            <div id="sub-title">Add your task and get your consistency
+                <button id="delete_data">Log out</button>
+            </div>
+            <div class="wrapper">
+                <div id="main">
+                    <div id="input">
+                        <label> Task: </label> 
+                        <input type="text" id="task" placeholder="What did you do today?">
+                        <br>
+                        <label> Hours: </label>                        
+                        <input type="number" id="hours" placeholder="How many hours?">
+                        <br><br>
+                        <button id="add" type="button">+ Add</button>
+                    </div>
+                    <br>
+                    <div id="msg"><p id="msg1"></p></div>
+                </div>
+                <div id="data-card">
+                    <h3><u>Today Entries:</u></h3>
+                    <ul id="list"></ul>
+                    <button id="clear_all">Clear all</button>
+                </div>
+                <div id="result">
+                    <h3><u>Your consistency:</u></h3>
+                    <div class="consistency-wrapper">
+                        <div class="consistency-card">
+                            <svg class="progress-ring" data-type="daily" viewBox="0 0 120 120">
+                                
+                                <defs>
+                                    <linearGradient id="daily_Gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#7fa9ff"/>
+                                        <stop offset="100%" stop-color="#3f72af"/>
+                                    </linearGradient>
+                                </defs>
+
+                                <circle class="bg" cx="60" cy="60" r="50"/>
+                                <circle class="progress" cx="60" cy="60" r="50"/>
+                                <text x="60" y="65" class="percent">0%</text>
+                            </svg>
+                            <p class="label">Daily</p>
+                        </div>
+                        
+                        <div class="consistency-card">
+                            <svg class="progress-ring" data-type="weekly" viewBox="0 0 120 120">
+                                <defs>
+                                    <linearGradient id="weekly_Gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#7fa9ff"/>
+                                        <stop offset="100%" stop-color="#3f72af"/>
+                                    </linearGradient>
+                                </defs>
+                                <circle
+                                    class="bg"
+                                    cx="60"
+                                    cy="60"
+                                    r="50"
+                                />
+                                <circle
+                                    class="progress"
+                                    cx="60"
+                                    cy="60"
+                                    r="50"
+                                />
+                                <text x="60" y="65" class="percent">0%</text>
+                            </svg>
+                        <p class="label">Weekly</p>
+                        </div>
+                    </div>
+                    <button id="consi_btn" type="button">Insights</button>
+                    <div id="greet">
+                        <p id="greeting"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="auth">
+            <div id="header">DailyBitz</div>
+            <div id="sub-title">TRACK YOUR CONSISTENCY!!</div>
+            <div id="login">
+                User ID:
+                <input type="text" id="u_id" placeholder="User ID">
+                <br>
+                Password:
+                <input type="password" id="u_pass" placeholder="your 4 digit secret code">
+                <button id="log">Log in</button>
+                <button id="register">Register</button>
+                <div id="error"></div>
+            </div>
+        </div>
+        <div id="disclaimer">
+            <div class="disclaimer-box">
+                <h2><u> Disclaimer: </u></h2>
+                   <ol class="disclaimer-list">
+                        <li>DailyBitz caps daily productivity at 15 hours, based on the developer’s belief that all-day productivity is unrealistic.</li>
+                        <li>Found a bug or have a query? Report it via 
+                            <a href="https://www.instagram.com/_priyanshu_12._/?__pwa=1#" target="_blank">
+                                Insta DM
+                            </a>.
+                        </li>
+                        <li>DailyBitz is a self-tracking tool for personal progress.</li>
+                        <li>Built with consistency by an independent developer.</li>
+                   </ol>
+                <button id="acceptBtn">I Understand</button>
+            </div>
+        </div>
+        <script src="script.js"></script>
+    </body>
+</html>
