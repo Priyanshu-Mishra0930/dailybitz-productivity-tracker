@@ -79,7 +79,8 @@ loginbtn.addEventListener("click",()=>{
     }
     })
     .catch(() => {
-    error_msg.textContent = "Server error. Try again.";
+        error_msg.textContent = "Server error. Try again.";
+    });
 });
 const token = localStorage.getItem("token");
 if (token){
@@ -334,6 +335,6 @@ function showMsg(text, color="#2e7d32"){
     setTimeout(() => {
         added.textContent = "";
     }, 2500);
-
 }
+
 
