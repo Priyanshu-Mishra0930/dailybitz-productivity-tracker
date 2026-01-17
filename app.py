@@ -2,11 +2,35 @@ from flask import *
 from flask_cors import CORS
 import json
 from datetime import *
-import os 
+import os
+import html
+import secrets
+from functools import wraps
 dailybitz=Flask(__name__)
 CORS(dailybitz)
 directory= os.path.dirname(os.path.abspath(__file__))
 f_name=os.path.join(directory,"users.json")
+active_tokens = {}
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        data = request.get_json(silent=True) or {}
+        token = data.get("token")
+
+        if not token or token not in active_tokens:
+            return jsonify({"msg": "Unauthorized"}), 401
+
+        token_data = active_tokens[token]
+
+        if datetime.utcnow() > token_data["expires"]:
+            del active_tokens[token]
+            return jsonify({"msg": "Session expired. Please login again."}), 401
+
+        request.username = token_data["username"]
+        return f(*args, **kwargs)
+    return decorated
+
+
 def read():
     if not os.path.exists(f_name):
         return {}
@@ -57,25 +81,28 @@ def added_user():
             "msg":"Enter User ID and Password!!"
         }),400
     user=read()
-    if username in user:
-        if password==user[username]["password"]:
-            return jsonify({
-                "success":True
-            })
-        else:
-            return jsonify({
-                "msg":"Password Incorrect"
-            })
+    if username in user and password==user[username]["password"]:
+        token = secrets.token_hex(16)
+        active_tokens[token] = {
+            "username":username,
+            "expires":datetime.utcnow() + timedelta(hours=6)
+            }
+        return jsonify({
+            "success":True,
+            "token":token
+        })
     else:
         return jsonify({
-            "msg":"User doesn't exist!! Register Now"
-        })
-    
+            "msg":"Invalid credentials"
+        }),401
+
 @dailybitz.route("/add_entries",methods=["POST"])
+@token_required
 def entries():
     data=request.json
-    username=data.get("username")
+    username=request.username
     task=data.get("task")
+    task=html.escape(task)
     try:
         hours = float(data.get("hours"))
         if hours <= 0 or hours > 15:
@@ -96,8 +123,10 @@ def entries():
         "msg":"Entry appended Successfully!!"
     })
 
-@dailybitz.route("/get_entries/<username>")
-def get_entries(username):
+@dailybitz.route("/get_entries",methods=["POST"])
+@token_required
+def get_entries():
+    username=request.username
     users = read()
 
     if username not in users:
@@ -110,12 +139,13 @@ def get_entries(username):
         if i["Date"]==today:
             today_entries.append(i)
     return jsonify(today_entries)
-    
+
 
 @dailybitz.route("/delete_entry", methods=["DELETE"])
+@token_required
 def delete_entry():
     data = request.json
-    username = data["username"]
+    username = request.username
     index = data["index"]
     users = read()
     if username not in users:
@@ -130,9 +160,10 @@ def delete_entry():
     return jsonify({"msg": "Entry deleted"})
 
 @dailybitz.route("/clear_all", methods=["DELETE"])
+@token_required
 def clear_all():
     data = request.json
-    username = data["username"]
+    username = request.username
     users = read()
     if username not in users:
         return jsonify({"msg": "Invalid user"}), 400
@@ -150,8 +181,10 @@ def clear_all():
         "color":"#2e7d32"
     })
 
-@dailybitz.route("/get_consistency/<username>")
-def get_consistency(username):
+@dailybitz.route("/get_consistency",methods=["POST"])
+@token_required
+def get_consistency():
+    username=request.username
     users=read()
     if username not in users:
         return jsonify({"msg": "User not found"}),404
@@ -168,7 +201,6 @@ def get_consistency(username):
     for e in entries:
         entry_date=date.fromisoformat(e["Date"])
         hours=e["Hours"]
-
         if entry_date==today:
             daily+=hours
         if week_star<=entry_date<=today:
@@ -180,6 +212,3 @@ def get_consistency(username):
         "daily":daily_consistency,
         "weekly":weekly_consistency
     })
-
-if __name__ == "__main__":
-    dailybitz.run()
