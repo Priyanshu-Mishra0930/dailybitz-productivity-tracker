@@ -35,14 +35,7 @@ registerbtn.addEventListener("click",()=>{
             password:pass
         })
     })
-    .then(res => {
-        if (res.status === 401) {
-                localStorage.clear();
-                location.reload();
-                return;
-            }
-            return res.json();
-        })
+    .then(res => res.json())
     .then(data => {
         error_msg.innerHTML = data.msg;
         if (data.msg ==="User registered successfully!!"){
@@ -72,14 +65,7 @@ loginbtn.addEventListener("click",()=>{
             password:pass
         })
     })
-    .then(res => {
-        if (res.status === 401) {
-            localStorage.clear();
-            location.reload();
-            return;
-        }
-        return res.json();
-    })
+    .then(res => res.json())
     .then(data=>{
         error_msg.innerHTML = data.msg;
         if (data.success){
@@ -88,10 +74,13 @@ loginbtn.addEventListener("click",()=>{
             authdiv.style.display="none";
             appdiv.style.display="block";
         }else {
-        error_msg.innerHTML = data.msg || "Login failed";
+            error_msg.style.color = "red";
+            error_msg.innerHTML = data.msg || "Login failed";
     }
     })
-})
+    .catch(() => {
+    error_msg.textContent = "Server error. Try again.";
+});
 const token = localStorage.getItem("token");
 if (token){
     authdiv.style.display="none";
@@ -201,6 +190,7 @@ function writelist() {
 
     getdata().then(data => {
         if (!localStorage.getItem("current_user")) return;
+        if (!data) return;
         data.forEach((item, index) => {
             const li = document.createElement("li");
             li.textContent = `${item.Task} — ${item.Hours} hrs `;
@@ -218,7 +208,6 @@ function writelist() {
 }
 
 function clear_entry(index) {
-    const username = localStorage.getItem("current_user");
     fetch(`https://priyanshumishra0930.pythonanywhere.com/delete_entry`, {
         method: "DELETE",
         headers: {
@@ -347,3 +336,4 @@ function showMsg(text, color="#2e7d32"){
     }, 2500);
 
 }
+
