@@ -35,13 +35,19 @@ registerbtn.addEventListener("click",()=>{
             password:pass
         })
     })
-    .then(res => res.json())
+    .then(res => {
+        if (res.status === 401) {
+                localStorage.clear();
+                location.reload();
+                return;
+            }
+            return res.json();
+        })
     .then(data => {
         error_msg.innerHTML = data.msg;
-        if (data.msg ==="user register succesfully!!"){
-            localStorage.setItem("current_user",user);
-            authdiv.style.display="none";
-            appdiv.style.display="block";
+        if (data.msg ==="User registered successfully!!"){
+            error_msg.style.color = "green";
+            error_msg.innerHTML = "Registered successfully. Please log in.";
         }
     })
     .catch(err => {
@@ -66,22 +72,36 @@ loginbtn.addEventListener("click",()=>{
             password:pass
         })
     })
-    .then(res=>res.json())
+    .then(res => {
+        if (res.status === 401) {
+            localStorage.clear();
+            location.reload();
+            return;
+        }
+        return res.json();
+    })
     .then(data=>{
         error_msg.innerHTML = data.msg;
         if (data.success){
+            localStorage.setItem("token", data.token);
             localStorage.setItem("current_user",user);
             authdiv.style.display="none";
             appdiv.style.display="block";
-        }
+        }else {
+        error_msg.innerHTML = data.msg || "Login failed";
+    }
     })
 })
-const saved=localStorage.getItem("current_user")
-if (saved){
-    authdiv.style.display="none"
-    appdiv.style.display="block"
+const token = localStorage.getItem("token");
+if (token){
+    authdiv.style.display="none";
+    appdiv.style.display="block";
     writelist();
+} else {
+    appdiv.style.display="none";
+    authdiv.style.display="block";
 }
+
 
 const logout_user = document.getElementById("delete_data");
 logout_user.addEventListener("click", () => {
@@ -89,11 +109,13 @@ logout_user.addEventListener("click", () => {
     const error_msg=document.getElementById("error");
     
     if (!sure) return;
+    localStorage.removeItem("token");
     localStorage.removeItem("current_user");
     appdiv.style.display = "none";
     authdiv.style.display = "block";
     document.getElementById("u_id").value = "";
     document.getElementById("u_pass").value = "";
+    sessionStorage.removeItem("disclaimerAccepted");
     error_msg.innerHTML=" "
 });
 
@@ -117,7 +139,7 @@ add_btn.addEventListener("click", (e)=> {
         return;
     }
     else{
-        const username=localStorage.getItem("current_user")
+        const token = localStorage.getItem("token");
         add_btn.disabled=true
         fetch("https://priyanshumishra0930.pythonanywhere.com/add_entries",{
             method:"POST",
@@ -125,12 +147,19 @@ add_btn.addEventListener("click", (e)=> {
                 "Content-Type":"application/json"
             },
             body:JSON.stringify({
-                username:username,
+                token: token,
                 task:task,
                 hours:hours
             })
         })
-        .then(res=>res.json())
+        .then(res => {
+            if (res.status === 401) {
+                localStorage.clear();
+                location.reload();
+                return;
+            }
+            return res.json();
+        })
         .then(data=>{
             if (!localStorage.getItem("current_user")) return;
 
@@ -145,9 +174,23 @@ add_btn.addEventListener("click", (e)=> {
 }
 })
 function getdata() {
-    const username = localStorage.getItem("current_user");
-    return fetch(`https://priyanshumishra0930.pythonanywhere.com/get_entries/${username}`)
-        .then(res => res.json());
+    return fetch(`https://priyanshumishra0930.pythonanywhere.com/get_entries`,{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+            token:localStorage.getItem("token")
+        })
+    })
+        .then(res => {
+            if (res.status === 401) {
+                localStorage.clear();
+                location.reload();
+                return;
+            }
+            return res.json();
+        })
 }
 
 function writelist() {
@@ -160,9 +203,16 @@ function writelist() {
         if (!localStorage.getItem("current_user")) return;
         data.forEach((item, index) => {
             const li = document.createElement("li");
-            li.innerHTML = `${item.Task} — ${item.Hours} hrs &ensp;
-                <button class="del-item" onclick="clear_entry(${index})">x</button>`;
+            li.textContent = `${item.Task} — ${item.Hours} hrs `;
+            
+            const btn = document.createElement("button");
+            btn.textContent = "x";
+            btn.className = "del-item";
+            btn.onclick = () => clear_entry(index);
+            
+            li.appendChild(btn);
             list.appendChild(li);
+
         });
     });
 }
@@ -175,11 +225,18 @@ function clear_entry(index) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            username: username,
+            token: localStorage.getItem("token"),
             index: index
         })
     })
-    .then(res => res.json())
+    .then(res => {
+        if (res.status === 401) {
+            localStorage.clear();
+            location.reload();
+            return;
+        }
+        return res.json();
+    })
     .then(data => {
         writelist();
     });
@@ -188,7 +245,6 @@ function clear_entry(index) {
 const clear_data = document.getElementById("clear_all");
 clear_data.addEventListener("click", () => {
     const added = document.getElementById("msg1");
-    const username = localStorage.getItem("current_user");
     const confirmation = confirm("Are you sure to clear all entries from the database?!!");
     if (!confirmation) return;
     fetch("https://priyanshumishra0930.pythonanywhere.com/clear_all", {
@@ -196,9 +252,18 @@ clear_data.addEventListener("click", () => {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ username })
+        body:JSON.stringify({ 
+            token: localStorage.getItem("token")
+        })
     })
-    .then(res => res.json())
+    .then(res => {
+        if (res.status === 401) {
+            localStorage.clear();
+            location.reload();
+            return;
+        }
+        return res.json();
+    })
     .then(data => {
         showMsg(data.msg,data.color)
         writelist();
@@ -226,8 +291,23 @@ const consistency=document.getElementById("consi_btn")
 consistency.addEventListener("click", () => {
     const username=localStorage.getItem("current_user");
 
-    fetch(`https://priyanshumishra0930.pythonanywhere.com/get_consistency/${username}`)
-        .then(res=>res.json())
+    fetch(`https://priyanshumishra0930.pythonanywhere.com/get_consistency`,{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+            token: localStorage.getItem("token")
+        })
+    })
+        .then(res => {
+            if (res.status === 401) {
+                localStorage.clear();
+                location.reload();
+                return;
+            }
+            return res.json();
+        })
         .then(data => {
             if (!localStorage.getItem("current_user")) return;
 
@@ -265,4 +345,5 @@ function showMsg(text, color="#2e7d32"){
     setTimeout(() => {
         added.textContent = "";
     }, 2500);
+
 }
